@@ -6,6 +6,7 @@ yamanoteStations=["東京","神田","秋葉原","御徒町","上野","鶯谷","�
 db=sqlite3.connect("fare.sqlite")
 cursor=db.cursor()
 G = nx.Graph()
+
 with open("tokyo.csv",mode="r",encoding='utf-8-sig') as f:
     reader = csv.reader(f)
     for row in reader:
