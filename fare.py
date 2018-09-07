@@ -59,5 +59,6 @@ def getAll():
     else:
         return "Please pass the required parameters on the query string or in the request body."
 
-if __name__ == '__main__':
-  app.run()
+def application():  
+    if __name__ == '__main__':
+        app.run()
