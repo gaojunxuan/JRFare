@@ -50,7 +50,7 @@ def getAll():
             'ticketFare':getNormalFare(f,t),
             'icCardFare':getICFare(f,t),
             'childTicketFare':math.floor(getNormalFare(f,t)/2),
-            'childIcFare':math.floor(getICFare(f,t)/2)
+            'childIcCardFare':math.floor(getICFare(f,t)/2)
             }
             return jsonify(result)
         except nx.exception.NetworkXNoPath:
