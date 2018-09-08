@@ -43,7 +43,7 @@ def getICFare(src:str,dst:str):
         return cursor.fetchone()[0]
 
 def getJapaneseStationName(en):
-    station_cursor.execute("SELECT ja FROM stations WHERE en=?",(en,))
+    station_cursor.execute("SELECT ja FROM stations WHERE name=?",(en,))
     result=station_cursor.fetchone()
     if result is not None:
         return result[0]
