@@ -7,7 +7,9 @@ app = Flask(__name__)
 
 yamanoteStations=["東京","神田","秋葉原","御徒町","上野","鶯谷","日暮里","西日暮里","田端","駒込","巣鴨","大塚","池袋","目白","高田馬場","新大久保","新宿","代々木","原宿","渋谷","恵比寿","目黒","五反田","大崎","品川","田町","浜松町","新橋","有楽町",]
 db=sqlite3.connect("fare.sqlite",check_same_thread=False)
+station_db=sqlite3.connect("station.sqlite",check_same_thread=False)
 cursor=db.cursor()
+station_cursor=station_db.cursor()
 G = nx.Graph()
 
 with open("tokyo.csv",mode="r",encoding='utf-8-sig') as f:
@@ -40,12 +42,23 @@ def getICFare(src:str,dst:str):
         cursor.execute("SELECT icFare FROM fare WHERE minDistance<=? AND maxDistance>=? AND line='TokuteiKukan'",(round(distance),round(distance)))
         return cursor.fetchone()[0]
 
+def getJapaneseStationName(en):
+    station_cursor.execute("SELECT ja FROM stations WHERE en=?",(en,))
+    result=station_cursor.fetchone()
+    if result is not None:
+        return result[0]
+
 @app.route('/jr', methods=['GET'])
 def getAll():
-    f = request.args.get('from')
-    t = request.args.get('to')
+    f=request.args.get("from")
+    t=request.args.get("to")
     if f is not None and t is not None:
+        f=getJapaneseStationName(f)
+        t=getJapaneseStationName(t)
+        if f is None or t is None:
+            return "Error: station not found"
         try:
+            
             result={
             'ticketFare':getNormalFare(f,t),
             'icCardFare':getICFare(f,t),
@@ -55,7 +68,6 @@ def getAll():
             return jsonify(result)
         except nx.exception.NetworkXNoPath:
             return "Error: node is not reachable"
-        
     else:
         return "Please pass the required parameters on the query string or in the request body."
 
