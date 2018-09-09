@@ -28,12 +28,25 @@ tsukubaDistance={
     "研究学園": 55,
     "つくば": 58.3,
 }
+monorailDistance={
+    "浜松町":0,
+    "天王洲アイル":4,
+    "大井競馬場前":7.1,
+    "流通センター":8.7,
+    "昭和島":9.9,
+    "整備場":11.8,
+    "天空橋":12.6,
+    "羽田空港国際線ビル":14,
+    "新整備場":16.1,
+    "羽田空港第１ビル":16.9,
+    "羽田空港第２ビル":17.8,
+}
 db=sqlite3.connect("fare.sqlite",check_same_thread=False)
 station_db=sqlite3.connect("station.sqlite",check_same_thread=False)
-tsukuba_db=sqlite3.connect("tsukubafare.sqlite",check_same_thread=False)
+other_db=sqlite3.connect("otherfare.sqlite",check_same_thread=False)
 cursor=db.cursor()
 station_cursor=station_db.cursor()
-tsukuba_cursor=tsukuba_db.cursor()
+other_cursor=other_db.cursor()
 G = nx.Graph()
 
 with open("tokyo.csv",mode="r",encoding='utf-8-sig') as f:
@@ -41,7 +54,7 @@ with open("tokyo.csv",mode="r",encoding='utf-8-sig') as f:
     for row in reader:
         G.add_edge(row[0],row[1],weight=float(row[2]))
 
-
+#JR
 def isYamanoteStation(staName:str):
     return staName in yamanoteStations
 
@@ -72,31 +85,56 @@ def getJapaneseStationName(en):
     if result is not None:
         return result[0]
 
+#Tsukuba Express
 def getTsukubaDistance(src:str,dst:str):
-    return math.ceil(math.fabs(tsukubaDistance[dst]-tsukubaDistance[src]))
+    return math.ceil(abs(tsukubaDistance[dst]-tsukubaDistance[src]))
 
 def getTsukubaNormalFare(src:str,dst:str):
     distance=getTsukubaDistance(src,dst)
-    tsukuba_cursor.execute("SELECT normalFare FROM tsukubafare WHERE minDistance<=? AND maxDistance>=? AND line='TsukubaExpress'",(distance,distance))
-    return tsukuba_cursor.fetchone()[0]
+    other_cursor.execute("SELECT normalFare FROM tsukubafare WHERE minDistance<=? AND maxDistance>=? AND line='TsukubaExpress'",(distance,distance))
+    return other_cursor.fetchone()[0]
 
 def getTsukubaICFare(src:str,dst:str):
     distance=getTsukubaDistance(src,dst)
-    tsukuba_cursor.execute("SELECT icFare FROM tsukubafare WHERE minDistance<=? AND maxDistance>=? AND line='TsukubaExpress'",(distance,distance))
-    return tsukuba_cursor.fetchone()[0]
+    other_cursor.execute("SELECT icFare FROM tsukubafare WHERE minDistance<=? AND maxDistance>=? AND line='TsukubaExpress'",(distance,distance))
+    return other_cursor.fetchone()[0]
 
 def getTsukubaChildFare(src:str,dst:str):
     distance=getTsukubaDistance(src,dst)
-    tsukuba_cursor.execute("SELECT childFare FROM tsukubafare WHERE minDistance<=? AND maxDistance>=? AND line='TsukubaExpress'",(distance,distance))
-    return tsukuba_cursor.fetchone()[0]
+    other_cursor.execute("SELECT childFare FROM tsukubafare WHERE minDistance<=? AND maxDistance>=? AND line='TsukubaExpress'",(distance,distance))
+    return other_cursor.fetchone()[0]
 
 def getTsukubaChildIcFare(src:str,dst:str):
     distance=getTsukubaDistance(src,dst)
-    tsukuba_cursor.execute("SELECT childIcFare FROM tsukubafare WHERE minDistance<=? AND maxDistance>=? AND line='TsukubaExpress'",(distance,distance))
-    return tsukuba_cursor.fetchone()[0]
+    other_cursor.execute("SELECT childIcFare FROM tsukubafare WHERE minDistance<=? AND maxDistance>=? AND line='TsukubaExpress'",(distance,distance))
+    return other_cursor.fetchone()[0]
+
+#Tokyo Monorail
+def getMonorailDistance(src:str,dst:str):
+    return round(abs(monorailDistance[dst]-monorailDistance[src]))
+
+def getMonorailNormalFare(src:str,dst:str):
+    distance=getMonorailDistance(src,dst)
+    other_cursor.execute("SELECT normalFare FROM monorailfare WHERE minDistance<=? AND maxDistance>=? AND line='TokyoMonorail'",(distance,distance))
+    return other_cursor.fetchone()[0]
+
+def getMonorailICFare(src:str,dst:str):
+    distance=getMonorailDistance(src,dst)
+    other_cursor.execute("SELECT icFare FROM monorailfare WHERE minDistance<=? AND maxDistance>=? AND line='TokyoMonorail'",(distance,distance))
+    return other_cursor.fetchone()[0]
+
+def getMonorailChildFare(src:str,dst:str):
+    distance=getMonorailDistance(src,dst)
+    other_cursor.execute("SELECT childFare FROM monorailfare WHERE minDistance<=? AND maxDistance>=? AND line='TokyoMonorail'",(distance,distance))
+    return other_cursor.fetchone()[0]
+
+def getMonorailChildIcFare(src:str,dst:str):
+    distance=getMonorailDistance(src,dst)
+    other_cursor.execute("SELECT childIcFare FROM monorailfare WHERE minDistance<=? AND maxDistance>=? AND line='TokyoMonorail'",(distance,distance))
+    return other_cursor.fetchone()[0]
 
 @app.route('/jr', methods=['GET'])
-def getAll():
+def getJR():
     f=request.args.get("from")
     t=request.args.get("to")
     if f is not None and t is not None:
@@ -138,5 +176,25 @@ def getTsukuba():
     else:
         return "Please pass the required parameters on the query string or in the request body."
 
+@app.route('/tokyomonorail', methods=['GET'])
+def getMonorail():
+    f=request.args.get("from")
+    t=request.args.get("to")
+    if f is not None and t is not None:
+        f=getJapaneseStationName(f)
+        t=getJapaneseStationName(t)
+        if f is None or t is None:
+            return "Error: station not found"
+        else:
+            result={
+            'ticketFare':getMonorailNormalFare(f,t),
+            'icCardFare':getMonorailICFare(f,t),
+            'childTicketFare':getMonorailChildFare(f,t),
+            'childIcCardFare':getMonorailChildIcFare(f,t)
+            }
+            return jsonify(result)
+    else:
+        return "Please pass the required parameters on the query string or in the request body."
+
 if __name__ == '__main__':
-        app.run()
+        app.run(debug=True)
