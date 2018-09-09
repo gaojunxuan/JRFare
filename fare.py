@@ -197,4 +197,4 @@ def getMonorail():
         abort(500,"Please pass the required parameters on the query string or in the request body.") 
 
 if __name__ == '__main__':
-        app.run(debug=True)
+        app.run()
