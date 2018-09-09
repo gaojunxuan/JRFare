@@ -79,8 +79,8 @@ def getICFare(src:str,dst:str):
         cursor.execute("SELECT icFare FROM fare WHERE minDistance<=? AND maxDistance>=? AND line='TokuteiKukan'",(round(distance),round(distance)))
         return cursor.fetchone()[0]
 
-def getJapaneseStationName(en):
-    station_cursor.execute("SELECT ja FROM stations WHERE name=?",(en,))
+def getJapaneseStationName(en,company):
+    station_cursor.execute("SELECT ja FROM stations WHERE name=? and company=?",(en,company))
     result=station_cursor.fetchone()
     if result is not None:
         return result[0]
@@ -138,8 +138,8 @@ def getJR():
     f=request.args.get("from")
     t=request.args.get("to")
     if f is not None and t is not None:
-        f=getJapaneseStationName(f)
-        t=getJapaneseStationName(t)
+        f=getJapaneseStationName(f,"JR-East")
+        t=getJapaneseStationName(t,"JR-East")
         if f is None or t is None:
             return "Error: station not found"
         try:
@@ -161,8 +161,8 @@ def getTsukuba():
     f=request.args.get("from")
     t=request.args.get("to")
     if f is not None and t is not None:
-        f=getJapaneseStationName(f)
-        t=getJapaneseStationName(t)
+        f=getJapaneseStationName(f,"TsukubaExpress")
+        t=getJapaneseStationName(t,"TsukubaExpress")
         if f is None or t is None:
             return "Error: station not found"
         else:
@@ -181,8 +181,8 @@ def getMonorail():
     f=request.args.get("from")
     t=request.args.get("to")
     if f is not None and t is not None:
-        f=getJapaneseStationName(f)
-        t=getJapaneseStationName(t)
+        f=getJapaneseStationName(f,"TokyoMonorail")
+        t=getJapaneseStationName(t,"TokyoMonorail")
         if f is None or t is None:
             return "Error: station not found"
         else:
