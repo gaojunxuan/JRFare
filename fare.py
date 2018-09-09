@@ -2,7 +2,7 @@ import networkx as nx
 import csv
 import sqlite3
 import math
-from flask import Flask,request,jsonify
+from flask import Flask,request,jsonify,abort,Response
 app = Flask(__name__)
 
 yamanoteStations=["東京","神田","秋葉原","御徒町","上野","鶯谷","日暮里","西日暮里","田端","駒込","巣鴨","大塚","池袋","目白","高田馬場","新大久保","新宿","代々木","原宿","渋谷","恵比寿","目黒","五反田","大崎","品川","田町","浜松町","新橋","有楽町",]
@@ -141,7 +141,7 @@ def getJR():
         f=getJapaneseStationName(f,"JR-East")
         t=getJapaneseStationName(t,"JR-East")
         if f is None or t is None:
-            return "Error: station not found"
+            abort(500,"Error: station not found")
         try:
             
             result={
@@ -152,9 +152,9 @@ def getJR():
             }
             return jsonify(result)
         except nx.exception.NetworkXNoPath:
-            return "Error: node is not reachable"
+            abort(500,"Error: node is not reachable")
     else:
-        return "Please pass the required parameters on the query string or in the request body."
+        abort(500,"Please pass the required parameters on the query string or in the request body.")        
 
 @app.route('/tsukubaexpress', methods=['GET'])
 def getTsukuba():
@@ -164,7 +164,7 @@ def getTsukuba():
         f=getJapaneseStationName(f,"TsukubaExpress")
         t=getJapaneseStationName(t,"TsukubaExpress")
         if f is None or t is None:
-            return "Error: station not found"
+            abort(500,"Error: station not found")
         else:
             result={
             'ticketFare':getTsukubaNormalFare(f,t),
@@ -174,7 +174,7 @@ def getTsukuba():
             }
             return jsonify(result)
     else:
-        return "Please pass the required parameters on the query string or in the request body."
+        abort(500,"Please pass the required parameters on the query string or in the request body.") 
 
 @app.route('/tokyomonorail', methods=['GET'])
 def getMonorail():
@@ -184,7 +184,7 @@ def getMonorail():
         f=getJapaneseStationName(f,"TokyoMonorail")
         t=getJapaneseStationName(t,"TokyoMonorail")
         if f is None or t is None:
-            return "Error: station not found"
+            abort(500,"Error: station not found")
         else:
             result={
             'ticketFare':getMonorailNormalFare(f,t),
@@ -194,7 +194,7 @@ def getMonorail():
             }
             return jsonify(result)
     else:
-        return "Please pass the required parameters on the query string or in the request body."
+        abort(500,"Please pass the required parameters on the query string or in the request body.") 
 
 if __name__ == '__main__':
         app.run(debug=True)
