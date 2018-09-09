@@ -111,7 +111,7 @@ def getTsukubaChildIcFare(src:str,dst:str):
 
 #Tokyo Monorail
 def getMonorailDistance(src:str,dst:str):
-    return round(abs(monorailDistance[dst]-monorailDistance[src]))
+    return abs(monorailDistance[dst]-monorailDistance[src])
 
 def getMonorailNormalFare(src:str,dst:str):
     distance=getMonorailDistance(src,dst)
